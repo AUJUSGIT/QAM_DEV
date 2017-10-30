@@ -6,7 +6,7 @@ M    = 16;          %% M-ary value
 init_ph = 0;        %% Modulator Initial Phase-Offset in radians
 Eb_No_Start = 0;    %% Eb/No Start Value
 Eb_No_Step  = 1;    %% Eb/N0 Step Value
-Eb_No_End   = 10;   %% Eb/No End Value
+Eb_No_End   = 18;   %% Eb/No End Value
 num_bits    = 1e8;  %% Number of Bits to know BER
 num_errors  = 100;  %% Number of Errors to terminate each Eb/No case simulation
 num_sps     = 1;    %% Number of Samples Per Symbol
@@ -59,9 +59,18 @@ rx_symb= qam_demod(receivedSignal,M,0);
         numErrs_calc(i)  = numErrs;
         numBits_calc(i)  = numBits;
         i = i + 1;
+        clear receivedSignal numErrs numBits nErrors
 end
+fprintf('\n');
 toc;    
+clear dataIn dataMod dataout nErrors
 %% Plot BER Vs Eb/No
 
 Eb_No = (Eb_No_Start:Eb_No_Step:Eb_No_End);
-semilogy(Eb_No,ber_calc,'*')
+close all; figure
+semilogy(Eb_No,ber_calc,'bs-', 'LineWidth',2);
+grid on
+legend('simulation');
+xlabel('Eb/No, dB')
+ylabel('Bit Error Rate')
+title('Bit error probability curve for 16-QAM modulation')
