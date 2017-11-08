@@ -7,12 +7,13 @@ init_ph = 0;        %% Modulator Initial Phase-Offset in radians
 Eb_No_Start = 0;    %% Eb/No Start Value
 Eb_No_Step  = 1;    %% Eb/N0 Step Value
 Eb_No_End   = 18;   %% Eb/No End Value
-num_bits    = 1e4;  %% Number of Bits to measure BER
+num_bits    = 1e5;  %% Number of Bits to measure BER
 num_errors  = 100;  %% Number of Errors to terminate each Eb/No case simulation
 num_sps     = 1;    %% Number of Samples Per Symbol
 mod_type    = 0;    %% Select modulation type 0:Standard 16-QAM; 1:Custom Circular Mapping 16-QAM 
 init_phase  = 0;    %% Set initial phase of Mapper in radians
 enab_scr    = 1;    %% Enable Scrambler and De-Scrambler
+disable_plot = 1;   %% Use switch to disable the scatter plot at each Eb/No
 %% System Control Parameters 
 fp_en   = 1;        %% To Enable Fixed-point output
 fp_prec = 15;       %% Number of Fixed-Point Precision bit-widths
@@ -37,10 +38,18 @@ receivedSignal = awgn(dataMod,snr,'measured');
 %scatterplot(receivedSignal,1);
 fprintf('\n Computing BER for each Eb/No = %d',EbNo);
 %% Plot Noisy Signal to Constellation Diagram wrt Tx Mod Constellation
-% close all;
-% sPlotFig = scatterplot(receivedSignal,1,0,'g.');
-% hold on
-% scatterplot(dataMod,1,0,'k*',sPlotFig)
+if disable_plot == 0
+close all;
+sPlotFig = scatterplot(receivedSignal,1,0,'g.');
+hold on
+scatterplot(dataMod,1,0,'k*',sPlotFig)
+grid on
+legend('Received Symbol', 'Transmitted Symbol');
+xlabel('I-Data (Real-Component)')
+ylabel('Q-Data (Imaginary-Component)')
+title('Constellation Diagram of 16-QAM')
+pause(1);
+end
 %% Rx Demodulator
 
 rx_symb= QAM_demodulate(receivedSignal,mod_array,(0:1:15),M,mod_type,init_phase); %[symbol] = QAM_demodulate(sym,mod_array,bin_array,M,mod_type,init_phase)
@@ -77,18 +86,16 @@ end
 fprintf('\n');
 toc;    
 clear dataIn dataout nErrors
-%% Plot BER Vs Eb/No
-%% Plot Noisy Signal to Constellation Diagram wrt Tx Mod Constellation
-close all;
-sPlotFig = scatterplot(receivedSignal,1,0,'g.');
-hold on;
-scatterplot(dataMod,1,0,'k*',sPlotFig);
+
+
 %% Plot Eb/No Vs BER
 figure;
 Eb_No = (Eb_No_Start:Eb_No_Step:Eb_No_End);
-semilogy(Eb_No,ber_calc,'bs-', 'LineWidth',2);
+uncodedBER = berawgn(Eb_No,'qam',M);
+%semilogy(Eb_No,[ber_calc' uncodedBER'],'bs-', 'LineWidth',2);
+semilogy(Eb_No,[ber_calc' uncodedBER'],'LineWidth',2);
 grid on
-legend('simulation');
+legend('simulation','theory');
 xlabel('Eb/No, dB')
 ylabel('Bit Error Rate')
 title('Bit error probability curve for 16-QAM modulation')
